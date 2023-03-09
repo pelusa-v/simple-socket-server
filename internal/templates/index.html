@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  </head>
+
+  <body>
+    <h3>MinichatGO</h3>
+    <input id="chatInput" type="text"/>
+    <button id="sendMessage">Enviar mensaje</button>
+    <p>Di <strong>Hola</strong> para comenzar</p>
+    <hr/>
+    <pre id="output"></pre>
+
+    <script>
+      url = 'ws://localhost:8000/wssimple';
+      c = new WebSocket(url);
+      
+      submitChatMessage = function(){
+        $("#sendMessage").click(
+          function() {
+            c.send($("#chatInput").val())
+            $("#output").append((new Date())+ " ==> SENDING...       "+$("#chatInput").val()+"\n")
+          }
+        )
+      }
+
+      c.onmessage = function(msg){
+        $("#output").append((new Date())+ " <== RECEIVING...     "+msg.data+"\n")
+        console.log(msg)
+      }
+
+      c.onopen = function(){
+        submitChatMessage()
+      }
+    </script>
+
+  </body>
+</html>
