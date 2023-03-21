@@ -3,10 +3,12 @@ package sockets
 import (
 	"fmt"
 	"net/http"
+	"socket-server/internal/chat"
 	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
+	uuid "github.com/satori/go.uuid"
 )
 
 var wsUpgrader = websocket.Upgrader{
@@ -18,10 +20,10 @@ var wsUpgrader = websocket.Upgrader{
 	},
 }
 
-func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
+func ChatBotSocketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Printf("%v", err)
+		fmt.Printf("%v\n", err)
 	}
 
 	for {
@@ -43,4 +45,19 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		conn.WriteMessage(mtype, []byte(textResponse))
 	}
+}
+
+func RegisterClientSocketHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
+	client := &chat.Client{UserID: uuid.Must(uuid.NewV4(), nil).String(), Socket: conn, Message: make(chan []byte)}
+	fmt.Println("SE ESTÁ EJECUTANDO EL HANDLER QUE REGISTRA EL CLIENTE")
+	// fmt.Printf("Número de goroutines: %d", runtime.Stack(nil, true))
+	chat.Manager.Register <- client
+
+	go client.Read()
+	go client.Write()
 }
