@@ -58,6 +58,6 @@ func RegisterClientSocketHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("Número de goroutines: %d", runtime.Stack(nil, true))
 	chat.Manager.Register <- client
 
-	go client.Read()
-	go client.Write()
+	go client.ReadFromClient()
+	go client.WriteToClient()
 }

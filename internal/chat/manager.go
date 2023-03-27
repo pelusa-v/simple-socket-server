@@ -11,6 +11,7 @@ type ClientManager struct {
 	Register      chan *Client
 	Unregister    chan *Client
 	Broadcast     chan []byte
+	Sender        chan *ClientMessage
 }
 
 var Manager = ClientManager{
@@ -18,6 +19,7 @@ var Manager = ClientManager{
 	Register:      make(chan *Client),
 	Unregister:    make(chan *Client),
 	Broadcast:     make(chan []byte),
+	Sender:        make(chan *ClientMessage),
 }
 
 func (manager *ClientManager) ListenActions() {
@@ -27,18 +29,14 @@ func (manager *ClientManager) ListenActions() {
 			manager.ClientsStatus[channel] = true
 			msg, _ := json.Marshal(&ClientMessage{Sender: channel.UserID, Content: "Nuevo usuario registrado"})
 			manager.BroadcastMessage(msg)
-			// fmt.Printf("Se ha registrado un nuevo cliente!\n")
-			// fmt.Println(*channel)
-			// fmt.Printf("UserID: %v\n", (*channel).UserID)
-			// fmt.Printf("Message: %v\n", <-channel.Message)
 		case channel := <-manager.Unregister:
 			fmt.Printf("Se ha cerrado la conexión del siguiente cliente!\n")
 			fmt.Printf("UserID: %v", (*channel).UserID)
 			fmt.Printf("Message: %v", <-channel.Message)
 		case channel := <-manager.Broadcast:
-			for client := range manager.ClientsStatus {
-				client.Message <- channel
-			}
+			manager.BroadcastMessage(channel)
+		case channel := <-manager.Sender:
+			manager.SendMessage(channel)
 		}
 	}
 }
@@ -46,5 +44,13 @@ func (manager *ClientManager) ListenActions() {
 func (manager *ClientManager) BroadcastMessage(message []byte) {
 	for client := range manager.ClientsStatus {
 		client.Message <- message
+	}
+}
+
+func (manager *ClientManager) SendMessage(clientMessage *ClientMessage) {
+	for client, status := range manager.ClientsStatus {
+		if client.UserID == clientMessage.Destination && status {
+			client.Message <- []byte(clientMessage.Content)
+		}
 	}
 }
