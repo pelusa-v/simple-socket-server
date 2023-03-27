@@ -50,7 +50,9 @@ func (manager *ClientManager) BroadcastMessage(message []byte) {
 func (manager *ClientManager) SendMessage(clientMessage *ClientMessage) {
 	for client, status := range manager.ClientsStatus {
 		if client.UserID == clientMessage.Destination && status {
-			client.Message <- []byte(clientMessage.Content)
+			// client.Message <- []byte(clientMessage.Content)
+			clientMessageBytes, _ := json.Marshal(clientMessage)
+			client.Message <- clientMessageBytes
 		}
 	}
 }

@@ -33,7 +33,7 @@ func (c *Client) ReadFromClient() {
 		clientMessage := ClientMessage{}
 		_, messageBytes, _ := c.Socket.ReadMessage()
 		json.Unmarshal(messageBytes, &clientMessage)
-		clientMessage.Sender = c.UserID
+		clientMessage.Sender = c.UserID // destination and content come from client (browser)
 		fmt.Printf("READ FROM CLIENT: %v\n", clientMessage)
 		// jsonMessage, _ := json.Marshal(&ClientMessage{Sender: c.UserID, Content: string(message)})
 		// Manager.Broadcast <- jsonMessage
