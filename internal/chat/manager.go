@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"fmt"
-
 	"github.com/goccy/go-json"
 )
 
@@ -30,13 +28,16 @@ func (manager *ClientManager) ListenActions() {
 			msg, _ := json.Marshal(&ClientMessage{Sender: channel.UserID, Content: "Nuevo usuario registrado"})
 			manager.BroadcastMessage(msg)
 		case channel := <-manager.Unregister:
-			fmt.Printf("Se ha cerrado la conexión del siguiente cliente!\n")
-			fmt.Printf("UserID: %v", (*channel).UserID)
-			fmt.Printf("Message: %v", <-channel.Message)
+			if status := manager.ClientsStatus[channel]; status {
+				close(channel.Message)
+				delete(Manager.ClientsStatus, channel)
+				msg, _ := json.Marshal(&ClientMessage{Sender: channel.UserID, Content: "Usuario desconectado"})
+				manager.BroadcastMessage(msg)
+			}
 		case channel := <-manager.Broadcast:
 			manager.BroadcastMessage(channel)
-		case channel := <-manager.Sender:
-			manager.SendMessage(channel)
+		case channelMessage := <-manager.Sender:
+			manager.SendMessage(channelMessage)
 		}
 	}
 }

@@ -28,6 +28,12 @@ type ClientMessage struct {
 }
 
 func (c *Client) ReadFromClient() {
+
+	defer func() {
+		Manager.Unregister <- c
+		_ = c.Socket.Close()
+	}()
+
 	// Read message from socket connectd to client (browser) and broadcast to all clients
 	for {
 		clientMessage := ClientMessage{}
@@ -42,6 +48,10 @@ func (c *Client) ReadFromClient() {
 }
 
 func (c *Client) WriteToClient() {
+
+	defer func() {
+		_ = c.Socket.Close()
+	}()
 	// When manager broadcast messages scanned by ReadFromClient function
 	// (pass value by the message channel), this function send messages to all clietn sockets
 	for {
